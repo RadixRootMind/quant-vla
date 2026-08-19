@@ -1,0 +1,19 @@
+BASE_TASK_CONFIG_PATH: ./experiments/robot/r2r/config/vlnce_task.yaml
+EVAL:
+    SPLIT: val_unseen
+    EPISODE_COUNT: 1839
+    EVAL_NONLEARNING: True
+    NONLEARNING:
+        # RandomAgent or HandcraftedAgent
+        AGENT: RandomAgent
+
+INFERENCE:
+    SPLIT: val_unseen
+    PREDICTIONS_FILE: predictions.json
+    INFERENCE_NONLEARNING: True
+    NONLEARNING:
+        # RandomAgent or HandcraftedAgent
+        AGENT: "RandomAgent"
+
+OUTPUT_DIR: data/R2R_VLNCE/training/
+VIDEO_OPTION: ['disk']

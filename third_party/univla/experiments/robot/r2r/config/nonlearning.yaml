@@ -1,0 +1,19 @@
+BASE_TASK_CONFIG_PATH: VLN-CE/habitat_extensions/config/vlnce_task.yaml
+EVAL:
+    SPLIT: train
+    EPISODE_COUNT: 10819
+    EVAL_NONLEARNING: True
+    NONLEARNING:
+        AGENT: RandomAgent
+
+INFERENCE:
+    SPLIT: val_unseen
+    PREDICTIONS_FILE: predictions.json
+    INFERENCE_NONLEARNING: True
+    NONLEARNING:
+        # RandomAgent or HandcraftedAgent
+        AGENT: "RandomAgent"
+
+OUTPUT_DIR: datasets/R2R/R2R_VLNCE/training/
+# OUTPUT_DIR: data/videos/val_seen
+VIDEO_OPTION: ['disk']

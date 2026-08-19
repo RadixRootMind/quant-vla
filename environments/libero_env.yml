@@ -1,0 +1,61 @@
+# LIBERO Evaluation Environment
+# Purpose: Run LIBERO simulation environment and call inference server
+# Usage: conda env create -f libero_env.yml
+
+name: libero
+channels:
+  - conda-forge
+  - nvidia
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip
+
+  # Core dependencies
+  - pip:
+      # LIBERO (install from source after env creation)
+      # See: /tmp/LIBERO
+
+      # Simulation & Robotics
+      - robosuite>=1.4.0
+      - mujoco>=2.3.0
+      - gymnasium>=0.29.0
+
+      # Deep Learning (for eval client)
+      - torch>=2.0.0
+      - numpy<2.0.0  # Important: LIBERO requires numpy<2.0
+
+      # Utilities
+      - imageio>=2.34.0
+      - tqdm>=4.67.0
+      - requests>=2.32.0
+      - pyyaml>=6.0.0
+      - h5py>=3.12.0
+      - opencv-python-headless>=4.11.0
+
+      # GR00T eval utils (minimal)
+      - pandas>=2.2.0
+      - matplotlib>=3.10.0
+
+# Post-installation steps:
+# 1. Clone LIBERO:
+#    cd /tmp
+#    git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git
+#    cd LIBERO
+#
+# 2. Install LIBERO in editable mode:
+#    pip install -e . --config-settings editable_mode=compat
+#
+# 3. Fix PyTorch 2.6 compatibility:
+#    Edit /tmp/LIBERO/libero/libero/benchmark/__init__.py line 164:
+#    Change: init_states = torch.load(init_states_path)
+#    To:     init_states = torch.load(init_states_path, weights_only=False)
+#
+# 4. Configure LIBERO paths:
+#    Create ~/.libero/config.yaml with:
+#    assets: /tmp/LIBERO/libero/libero/assets
+#    bddl_files: /tmp/LIBERO/libero/libero/bddl_files
+#    benchmark_root: /tmp/LIBERO/libero/libero
+#    datasets: /tmp/LIBERO/datasets
+#    init_states: /tmp/LIBERO/libero/libero/init_files

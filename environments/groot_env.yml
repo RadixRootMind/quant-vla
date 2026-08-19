@@ -1,0 +1,53 @@
+# GR00T Inference Server Environment
+# Purpose: Run GR00T model inference server
+# Usage: conda env create -f groot_env.yml
+
+name: groot
+channels:
+  - conda-forge
+  - nvidia
+  - pytorch
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip
+
+  # PyTorch (CUDA 11.8)
+  - pytorch::pytorch>=2.0.0
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - pytorch::pytorch-cuda=11.8
+
+  # Core dependencies (via pip for specific versions)
+  - pip:
+      # GR00T package (install from source after env creation)
+      # This will install all dependencies from pyproject.toml:
+      #   - transformers==4.51.3
+      #   - timm==1.0.14
+      #   - accelerate==1.2.1
+      #   - peft==0.17.0
+      #   - albumentations==1.4.18
+      #   - av==12.3.0
+      #   - einops==0.8.1
+      #   - hydra-core==1.3.2
+      #   - kornia==0.7.4
+      #   - ray==2.40.0
+      #   - wandb==0.18.0
+      #   ... and more (see pyproject.toml)
+
+# Post-installation steps:
+# 1. Install GR00T package:
+#    cd /home/jz97/VLM_REPO/Isaac-GR00T
+#    pip install -e .
+#
+# 2. Verify installation:
+#    python -c "import torch; import transformers; import gr00t; print('✓ OK')"
+#
+# 3. Run inference server:
+#    ./run_inference_server.sh libero_goal
+
+# Note: If you have a different CUDA version, modify the pytorch-cuda version:
+# - CUDA 11.8: pytorch-cuda=11.8
+# - CUDA 12.1: pytorch-cuda=12.1
+# - CPU only: remove pytorch-cuda line

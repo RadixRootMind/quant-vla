@@ -1,0 +1,159 @@
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# build artifacts
+
+.eggs/
+.mypy_cache
+*.egg-info/
+build/
+dist/
+pip-wheel-metadata/
+
+
+# dev tools
+
+.envrc
+.env
+.env.local
+.python-version
+.idea
+.venv/
+.vscode/
+/*.iml
+pyrightconfig.json
+.ruff_cache/
+
+# jupyter notebooks
+
+.ipynb_checkpoints
+
+
+# miscellaneous
+
+.cache/
+doc/_build/
+*.swp
+.DS_Store
+
+
+# python
+
+*.pyc
+*.pyo
+__pycache__
+
+
+# testing and continuous integration
+
+.coverage
+.pytest_cache/
+.benchmarks
+
+# documentation build artifacts
+
+docs/build
+site/
+
+# The following ignores are from vila repository
+*.whl
+*_dev
+dev/
+# config.json
+eval_output/
+eval-result/
+hostfile
+core.*
+*.out
+captioner_bk/
+slurm-logs/
+captioner/
+hostfile
+*_dev.py
+*_dev.sh
+
+
+# Python
+__pycache__
+*.pyc
+*.egg-info
+dist
+
+# Log
+*.log
+*.log.*
+
+# Data
+!**/alpaca-data-conversation.json
+
+# Editor
+.idea
+*.swp
+
+# Other
+.DS_Store
+wandb
+
+# Playground
+playground/
+
+# Hydra 
+.hydra/
+
+# Data
+demo_data/gr00t-gr1-apple-to-shelf/
+tmp/
+output/
+results/
+summaries/
+rollouts/
+checkpoints/
+LIBERO/datasets/
+
+duquant*/
+rollout*/
+ohb_viz/
+smooth*/
+atm_viz*/
+ckpts*/
+media*/
+SimplerEnv/
+
+# Experiment runtime artifacts
+.bench_mode
+cache/
+examples/Libero/eval/MUJOCO_LOG.TXT
+
+# Experiment result binaries (too large for git)
+experiment_results/**/*.pt
+experiment_results/**/*.pt.bak*
+duquant_act_stats/*.pt
+duquant_act_stats/*.pt.bak*
+results/multisuite_packs/**/*.pt
+results/**/rollouts/
+results/**/logs/
+
+# But keep small visualizations + csv data
+!experiment_results/**/*.png
+!experiment_results/**/*.csv
+!experiment_results/**/*.pdf
