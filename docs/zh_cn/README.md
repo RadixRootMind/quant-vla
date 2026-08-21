@@ -61,6 +61,17 @@ quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化�
 | `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | QVLA mixed-bit W8 | 26.0% |
 | `univla_fp16` | UniVLA | LIBERO Spatial | FP16 + action decoder | 96.0% |
 
+## 验证环境
+
+以上验证结果来自以下本地工作站配置：
+
+| 组件 | 配置 |
+| --- | --- |
+| GPU | NVIDIA A100 40GB |
+| CPU | Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz |
+| 系统内存 | 96 GB |
+| 存储 | 200 GB SSD |
+
 ## 快速开始
 
 克隆仓库并创建本地环境配置：

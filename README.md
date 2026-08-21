@@ -66,6 +66,17 @@ These are local engineering validation results after the merge. They show that t
 | `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | QVLA mixed-bit W8 | 26.0% |
 | `univla_fp16` | UniVLA | LIBERO Spatial | FP16 with action decoder | 96.0% |
 
+## Verified Environment
+
+The validation results above were reproduced on the following local workstation configuration:
+
+| Component | Configuration |
+| --- | --- |
+| GPU | NVIDIA A100 40GB |
+| CPU | Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz |
+| System memory | 96 GB |
+| Storage | 200 GB SSD |
+
 ## From Clone To First Run
 
 Clone the repository and create a local environment file:
