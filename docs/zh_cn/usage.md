@@ -5,7 +5,7 @@
 ## 1. 加载环境
 
 ```bash
-cd /path/to/Awesome-quant-vla
+cd /path/to/quant-vla
 source .env.local
 conda activate awesome_quant_vla
 ```
@@ -13,7 +13,7 @@ conda activate awesome_quant_vla
 如果不使用 `.env.local`，可以手动导出：
 
 ```bash
-export AWESOME_QVLA_ROOT=/root/VLM_REPO/Awesome-quant-vla
+export AWESOME_QVLA_ROOT=/root/VLM_REPO/quant-vla
 export QUANTVLA_ROOT=$AWESOME_QVLA_ROOT
 export CHECKPOINTS_ROOT=/root/VLM_REPO/checkpoints
 export LIBERO_ROOT=/root/VLM_REPO/LIBERO

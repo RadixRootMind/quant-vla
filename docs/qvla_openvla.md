@@ -1,6 +1,6 @@
 # OpenVLA/QVLA Route
 
-Awesome-quant-vla includes the QVLA/OpenVLA route from AutoLab-SAI-SJTU/QVLA as an integrated third project family.
+quant-vla includes the QVLA/OpenVLA route from AutoLab-SAI-SJTU/QVLA as an integrated third project family.
 
 ## Included Backends
 

@@ -59,6 +59,12 @@ OpenVLA/QVLA profiles:
 UniVLA profiles:
   univla_fp16            UniVLA LIBERO FP16 eval with action decoder
 
+StarVLA profiles:
+  starvla_oft_fp16       StarVLA-OFT LIBERO FP16/BF16 eval
+  starvla_gr00t_fp16     StarVLA-GR00T LIBERO FP16/BF16 eval; pass matching checkpoint
+  starvla_pi_fp16        StarVLA-PI LIBERO FP16/BF16 eval; pass matching checkpoint
+  starvla_fast_fp16      StarVLA-FAST LIBERO FP16/BF16 eval; pass matching checkpoint
+
 Pack/checkpoint options:
   --groot-gptq-pack PATH  Pack for groot_w4a4_gptq.
   --pi05-gptq-pack PATH   Pack for pi05_w4a4_gptq.
@@ -72,6 +78,12 @@ Pack/checkpoint options:
   --univla-checkpoint PATH
   --univla-action-decoder PATH
   --univla-python PATH
+  --starvla-checkpoint PATH
+  --starvla-python PATH
+  --starvla-unnorm-key KEY
+  --starvla-use-bf16 0|1
+  --save-video True|False
+  --max-tasks N
   --calib-jsonl PATH
   --proxy-pt PATH
   --gates-json PATH
@@ -86,6 +98,7 @@ Examples:
   bash scripts/run_awesome_quant_vla.sh pi05_w4a8_duquant --suite object --gpus 0 --trials 10
   bash scripts/run_awesome_quant_vla.sh pi05_w4a4_gptq --suite object --action result
   bash scripts/run_awesome_quant_vla.sh univla_fp16 --suite spatial --gpus 0 --trials 10
+  bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 --suite spatial --gpus 0 --trials 10
 EOF
 }
 
@@ -205,6 +218,16 @@ EOF
   gates json       : ${GATES_JSON:-}
   target avg bits  : ${TARGET_AVG_BITS:-}
 EOF
+    elif [[ "$MODEL_KIND" == "starvla" ]]; then
+        cat <<EOF
+  starvla python   : ${STARVLA_PYTHON}
+  starvla checkpoint: ${STARVLA_CHECKPOINT}
+  method           : ${METHOD}
+  use bf16         : ${STARVLA_USE_BF16}
+  save video       : ${SAVE_VIDEO}
+  max tasks        : ${MAX_TASKS}
+  unnorm key       : ${STARVLA_UNNORM_KEY:-auto}
+EOF
     else
         cat <<EOF
   univla python    : ${UNIVLA_PYTHON}
@@ -240,6 +263,12 @@ OPENVLA_PYTHON_ARG="${OPENVLA_PYTHON:-}"
 UNIVLA_CHECKPOINT_ARG="${UNIVLA_CHECKPOINT:-${UNIVLA_CKPT:-}}"
 UNIVLA_ACTION_DECODER_ARG="${UNIVLA_ACTION_DECODER:-}"
 UNIVLA_PYTHON_ARG="${UNIVLA_PYTHON:-}"
+STARVLA_CHECKPOINT_ARG="${STARVLA_CHECKPOINT:-}"
+STARVLA_PYTHON_ARG="${STARVLA_PYTHON:-}"
+STARVLA_UNNORM_KEY="${STARVLA_UNNORM_KEY:-}"
+STARVLA_USE_BF16="${STARVLA_USE_BF16:-1}"
+SAVE_VIDEO="${SAVE_VIDEO:-False}"
+MAX_TASKS="${MAX_TASKS:--1}"
 CALIB_JSONL_ARG="${CALIB_JSONL:-}"
 PROXY_PT_ARG="${PROXY_PT:-}"
 GATES_JSON_ARG="${GATES_JSON:-}"
@@ -278,6 +307,12 @@ while [[ $# -gt 0 ]]; do
         --univla-checkpoint) UNIVLA_CHECKPOINT_ARG="${2:?missing --univla-checkpoint value}"; shift 2 ;;
         --univla-action-decoder|--action-decoder) UNIVLA_ACTION_DECODER_ARG="${2:?missing --univla-action-decoder value}"; shift 2 ;;
         --univla-python) UNIVLA_PYTHON_ARG="${2:?missing --univla-python value}"; shift 2 ;;
+        --starvla-checkpoint) STARVLA_CHECKPOINT_ARG="${2:?missing --starvla-checkpoint value}"; shift 2 ;;
+        --starvla-python) STARVLA_PYTHON_ARG="${2:?missing --starvla-python value}"; shift 2 ;;
+        --starvla-unnorm-key) STARVLA_UNNORM_KEY="${2:?missing --starvla-unnorm-key value}"; shift 2 ;;
+        --starvla-use-bf16) STARVLA_USE_BF16="${2:?missing --starvla-use-bf16 value}"; shift 2 ;;
+        --save-video) SAVE_VIDEO="${2:?missing --save-video value}"; shift 2 ;;
+        --max-tasks) MAX_TASKS="${2:?missing --max-tasks value}"; shift 2 ;;
         --calib-jsonl) CALIB_JSONL_ARG="${2:?missing --calib-jsonl value}"; shift 2 ;;
         --proxy-pt) PROXY_PT_ARG="${2:?missing --proxy-pt value}"; shift 2 ;;
         --gates-json) GATES_JSON_ARG="${2:?missing --gates-json value}"; shift 2 ;;
@@ -475,6 +510,20 @@ case "$PROFILE" in
         WBITS=8
         ABITS=16
         ;;
+    starvla_oft_fp16|starvla_fp16)
+        MODEL_KIND="starvla"
+        LAUNCHER="${SCRIPT_DIR}/run_starvla_libero.sh"
+        METHOD="fp16"
+        WBITS=16
+        ABITS=16
+        ;;
+    starvla_gr00t_fp16|starvla_pi_fp16|starvla_fast_fp16)
+        MODEL_KIND="starvla"
+        LAUNCHER="${SCRIPT_DIR}/run_starvla_libero.sh"
+        METHOD="fp16"
+        WBITS=16
+        ABITS=16
+        ;;
     univla_fp16|univla_libero_fp16)
         MODEL_KIND="univla"
         LAUNCHER="${SCRIPT_DIR}/run_univla_libero.sh"
@@ -526,6 +575,10 @@ elif [[ "$MODEL_KIND" == "openvla" ]]; then
     GATES_JSON="${GATES_JSON_ARG:-${OUTPUT_ROOT}/gates/greedy_bits.json}"
     export METHOD WBITS ABITS OPENVLA_BACKEND OPENVLA_PYTHON OPENVLA_CHECKPOINT
     export CALIB_JSONL PROXY_PT GATES_JSON TARGET_AVG_BITS BITS PROXY_BITS MAX_SAMPLES MAX_LAYERS
+elif [[ "$MODEL_KIND" == "starvla" ]]; then
+    STARVLA_PYTHON="${STARVLA_PYTHON_ARG:-python}"
+    STARVLA_CHECKPOINT="${STARVLA_CHECKPOINT_ARG:-${CHECKPOINTS_ROOT}/starvla/Qwen3-VL-OFT-LIBERO-4in1/checkpoints/steps_50000_pytorch_model.pt}"
+    export METHOD WBITS ABITS STARVLA_PYTHON STARVLA_CHECKPOINT STARVLA_UNNORM_KEY STARVLA_USE_BF16 SAVE_VIDEO MAX_TASKS
 else
     UNIVLA_PYTHON="${UNIVLA_PYTHON_ARG:-${OPENVLA_PYTHON_ARG:-python}}"
     UNIVLA_SUITE_SUFFIX="$SUITE"
@@ -540,7 +593,7 @@ else
     export UNIVLA_ATTN_IMPL="${UNIVLA_ATTN_IMPL:-${OPENVLA_ATTN_IMPL}}"
 fi
 
-if [[ "$MODEL_KIND" == "openvla" || "$MODEL_KIND" == "univla" ]]; then
+if [[ "$MODEL_KIND" == "openvla" || "$MODEL_KIND" == "univla" || "$MODEL_KIND" == "starvla" ]]; then
     PLAN_WAIT_LABEL="steps wait"
 else
     PLAN_WAIT_LABEL="init offset"

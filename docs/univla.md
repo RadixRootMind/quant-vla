@@ -1,8 +1,8 @@
 # UniVLA Guide
 
-Awesome-quant-vla includes OpenDriveLab/UniVLA as a fourth backend family.
+quant-vla includes OpenDriveLab/UniVLA as a fourth backend family.
 
-The current integration exposes the UniVLA LIBERO FP16 evaluation route. UniVLA's source tree also contains QVLA-related scripts, but Awesome-quant-vla does not yet mark a UniVLA quantized route as verified because UniVLA evaluation requires both latent action generation and an external action decoder.
+The current integration exposes the UniVLA LIBERO FP16 evaluation route. UniVLA's source tree also contains QVLA-related scripts, but quant-vla does not yet mark a UniVLA quantized route as verified because UniVLA evaluation requires both latent action generation and an external action decoder.
 
 ## Included Files
 

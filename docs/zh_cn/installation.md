@@ -1,6 +1,6 @@
 # 安装环境
 
-本文档说明从零准备 Awesome-quant-vla 的运行环境。GR00T/Pi0.5 和 OpenVLA/QVLA 的依赖差异较大，建议使用两个 conda 环境：
+本文档说明从零准备 quant-vla 的运行环境。GR00T/Pi0.5 和 OpenVLA/QVLA 的依赖差异较大，建议使用两个 conda 环境：
 
 - `awesome_quant_vla`：用于 GR00T-N1.5、Pi0.5/OpenPI。
 - `awesome_qvla_openvla`：用于 OpenVLA/OpenVLA-OFT QVLA。
@@ -9,7 +9,7 @@
 
 ```bash
 export WORKSPACE=${WORKSPACE:-$HOME/VLM_REPO}
-export AWESOME_QVLA_ROOT=$WORKSPACE/Awesome-quant-vla
+export AWESOME_QVLA_ROOT=$WORKSPACE/quant-vla
 export CHECKPOINTS_ROOT=$WORKSPACE/checkpoints
 export LIBERO_ROOT=$WORKSPACE/LIBERO
 export OPENPI_ROOT=$WORKSPACE/openpi
@@ -20,7 +20,7 @@ export OPENPI_ROOT=$WORKSPACE/openpi
 ```bash
 mkdir -p "$WORKSPACE"
 cd "$WORKSPACE"
-git clone <your-repo-url> Awesome-quant-vla
+git clone <your-repo-url> quant-vla
 cd "$AWESOME_QVLA_ROOT"
 
 cp .env.example .env.local
@@ -93,7 +93,15 @@ cd "$WORKSPACE"
 git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git "$LIBERO_ROOT"
 
 conda activate awesome_quant_vla
-python -m pip install -e "$LIBERO_ROOT"
+if [ -f "$LIBERO_ROOT/setup.py" ] || [ -f "$LIBERO_ROOT/pyproject.toml" ]; then
+  python -m pip install -e "$LIBERO_ROOT"
+elif [ -f "$LIBERO_ROOT/libero/setup.py" ] || [ -f "$LIBERO_ROOT/libero/pyproject.toml" ]; then
+  python -m pip install -e "$LIBERO_ROOT/libero"
+else
+  echo "Cannot find LIBERO setup.py or pyproject.toml under $LIBERO_ROOT"
+  find "$LIBERO_ROOT" -maxdepth 3 \( -name setup.py -o -name pyproject.toml \) -print
+  exit 1
+fi
 ```
 
 提前创建 LIBERO 配置，避免 benchmark 子进程卡在交互式提问：

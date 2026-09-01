@@ -1,6 +1,6 @@
 # 验证说明
 
-本文档记录 Awesome-quant-vla 当前合并版本的验证路线。表中的数值是本地工程验证结果，用来证明链路可以端到端运行，不等同于论文官方 benchmark。
+本文档记录 quant-vla 当前合并版本的验证路线。表中的数值是本地工程验证结果，用来证明链路可以端到端运行，不等同于论文官方 benchmark。
 
 ## 验证矩阵
 
@@ -14,6 +14,7 @@
 | `openvla_oft_fp16` | OpenVLA-OFT | LIBERO Spatial | 每任务 10 次 | 60.0% | FP16 baseline |
 | `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | 每任务 10 次 | 26.0% | QVLA mixed-bit W8 |
 | `univla_fp16` | UniVLA | LIBERO Spatial | 每任务 10 次 | 96.0% | FP16，使用 action decoder |
+| `starvla_oft_fp16` | StarVLA-OFT | LIBERO Spatial | 每任务 10 次 | 99.0% | FP16/BF16 policy-server 路线 |
 
 ## 通用设置
 
@@ -163,6 +164,32 @@ bash scripts/run_awesome_quant_vla.sh univla_fp16 \
 ```
 
 验证结果：`96.0%`。
+
+## StarVLA-OFT FP16/BF16
+
+StarVLA 使用独立 conda 环境，并通过 StarVLA websocket policy-server 链路完成 LIBERO 评测。
+
+```bash
+conda activate awesome_qvla_starvla
+cd "$AWESOME_QVLA_ROOT"
+source .env.local
+
+bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
+  --suite spatial \
+  --gpus 0 \
+  --trials 10 \
+  --port-base 8200 \
+  --starvla-python "$STARVLA_PYTHON" \
+  --starvla-checkpoint "$STARVLA_CKPT" \
+  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final"
+
+bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
+  --suite spatial \
+  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final" \
+  --action result
+```
+
+验证结果：`99.0%`。
 
 ## 常见可忽略提示
 

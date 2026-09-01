@@ -1,13 +1,13 @@
 # Checkpoints
 
-Awesome-quant-vla does not commit model weights, LIBERO datasets, or quantized packs. Put them anywhere and point the scripts to them with environment variables or CLI options.
+quant-vla does not commit model weights, LIBERO datasets, or quantized packs. Put them anywhere and point the scripts to them with environment variables or CLI options.
 
 ## 1. Path Variables
 
 Load the same path configuration used by the launch scripts before running any download command:
 
 ```bash
-cd /path/to/Awesome-quant-vla
+cd /path/to/quant-vla
 source .env.local
 
 echo "AWESOME_QVLA_ROOT=$AWESOME_QVLA_ROOT"
@@ -27,7 +27,7 @@ CHECKPOINTS_ROOT=$WORKSPACE/checkpoints
 For example, if the repository is:
 
 ```bash
-/opt/Awesome-quant-vla
+/opt/quant-vla
 ```
 
 then the default checkpoint directory is:
@@ -59,6 +59,11 @@ $CHECKPOINTS_ROOT/
   gr00t-n1.5-libero-goal-posttrain/
   gr00t-n1.5-libero-long-posttrain/
   pi05_libero_pytorch/
+  openvla-7b-finetuned-libero-spatial/
+  openvla-7b-oft-finetuned-libero-spatial/
+  univla-7b-224-sft-libero/
+  starvla/Qwen3-VL-OFT-LIBERO-4in1/
+  starvla/Qwen3-VL-4B-Instruct/
 ```
 
 For quantized packs, the default directory is under the repository itself:
@@ -74,10 +79,10 @@ $AWESOME_QVLA_ROOT/results/packs/
 
 So there are two separate storage roots:
 
-| Variable | Stores | Default example if repo is `/opt/Awesome-quant-vla` |
+| Variable | Stores | Default example if repo is `/opt/quant-vla` |
 | --- | --- | --- |
 | `CHECKPOINTS_ROOT` | FP/base model checkpoints | `/opt/checkpoints` or your override such as `/opt/ckpts` |
-| `AWESOME_QVLA_ROOT/results/packs` | W4A4 quantized packs | `/opt/Awesome-quant-vla/results/packs` |
+| `AWESOME_QVLA_ROOT/results/packs` | W4A4 quantized packs | `/opt/quant-vla/results/packs` |
 
 Do not run the download commands with an empty `CHECKPOINTS_ROOT`. Check it first:
 
@@ -92,6 +97,10 @@ This is only a convention, not a requirement. You can override individual paths 
 - `--openpi-checkpoint`
 - `--groot-gptq-pack`
 - `--pi05-gptq-pack`
+- `--openvla-checkpoint`
+- `--univla-checkpoint`
+- `--univla-action-decoder`
+- `--starvla-checkpoint`
 
 ## 2. GR00T-N1.5 Base Checkpoints
 
@@ -447,7 +456,50 @@ bash scripts/run_awesome_quant_vla.sh univla_fp16 \
   --univla-action-decoder /path/to/univla-7b-224-sft-libero/univla-libero-spatial/action_decoder.pt
 ```
 
-## 7. Build Packs Locally
+## 7. StarVLA Checkpoint
+
+StarVLA-OFT uses a policy checkpoint plus a Qwen3-VL base model expected by the upstream StarVLA path.
+
+Suggested layout:
+
+```bash
+$CHECKPOINTS_ROOT/
+  starvla/
+    Qwen3-VL-OFT-LIBERO-4in1/
+      checkpoints/steps_50000_pytorch_model.pt
+    Qwen3-VL-4B-Instruct/
+```
+
+Download the StarVLA-OFT LIBERO checkpoint:
+
+```bash
+mkdir -p "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-OFT-LIBERO-4in1"
+hf download StarVLA/Qwen3-VL-OFT-LIBERO-4in1 \
+  --local-dir "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-OFT-LIBERO-4in1"
+```
+
+Download the Qwen3-VL base model and link it to StarVLA's expected path:
+
+```bash
+mkdir -p "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-4B-Instruct"
+hf download Qwen/Qwen3-VL-4B-Instruct \
+  --local-dir "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-4B-Instruct"
+
+mkdir -p "$AWESOME_QVLA_ROOT/third_party/starvla/playground/Pretrained_models"
+ln -sfn "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-4B-Instruct" \
+  "$AWESOME_QVLA_ROOT/third_party/starvla/playground/Pretrained_models/Qwen3-VL-4B-Instruct"
+```
+
+Verify:
+
+```bash
+export STARVLA_CKPT="$CHECKPOINTS_ROOT/starvla/Qwen3-VL-OFT-LIBERO-4in1/checkpoints/steps_50000_pytorch_model.pt"
+
+test -f "$STARVLA_CKPT" && echo "StarVLA policy checkpoint ok"
+test -d "$AWESOME_QVLA_ROOT/third_party/starvla/playground/Pretrained_models/Qwen3-VL-4B-Instruct" && echo "Qwen3-VL base link ok"
+```
+
+## 8. Build Packs Locally
 
 The repository includes pack-building tools:
 

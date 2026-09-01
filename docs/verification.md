@@ -1,6 +1,6 @@
 # Verification Guide
 
-This document records the current frozen validation baseline for Awesome-quant-vla.
+This document records the current frozen validation baseline for quant-vla.
 
 The numbers below are local engineering validation results. They show that each route can run end-to-end after the merge, but they should not be treated as official paper benchmark numbers.
 
@@ -16,6 +16,7 @@ The numbers below are local engineering validation results. They show that each 
 | `openvla_oft_fp16` | OpenVLA-OFT | LIBERO Spatial | 10 per task | 60.0% | FP16 baseline route |
 | `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | 10 per task | 26.0% | QVLA mixed-bit W8 route |
 | `univla_fp16` | UniVLA | LIBERO Spatial | 10 per task | 96.0% | FP16 route with action decoder |
+| `starvla_oft_fp16` | StarVLA-OFT | LIBERO Spatial | 10 per task | 99.0% | FP16/BF16 policy-server route |
 
 ## Common Setup
 
@@ -216,6 +217,32 @@ bash scripts/run_awesome_quant_vla.sh univla_fp16 \
 ```
 
 Verified result: `96.0%`.
+
+## StarVLA-OFT FP16/BF16
+
+StarVLA runs in its own conda environment and uses the StarVLA websocket policy-server path.
+
+```bash
+conda activate awesome_qvla_starvla
+cd "$AWESOME_QVLA_ROOT"
+source .env.local
+
+bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
+  --suite spatial \
+  --gpus 0 \
+  --trials 10 \
+  --port-base 8200 \
+  --starvla-python "$STARVLA_PYTHON" \
+  --starvla-checkpoint "$STARVLA_CKPT" \
+  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final"
+
+bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
+  --suite spatial \
+  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final" \
+  --action result
+```
+
+Verified result: `99.0%`.
 
 ## Known Benign Warnings
 

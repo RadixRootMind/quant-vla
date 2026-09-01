@@ -2,7 +2,7 @@
 
 This file is kept only to explain the migration status of the legacy QuantVLA environment notes.
 
-The old standalone setup guide used machine-specific paths and a two-environment layout from the original reproduction workspace. Awesome-quant-vla replaces that workflow with project-level configuration variables and a single public entrypoint.
+The old standalone setup guide used machine-specific paths and a two-environment layout from the original reproduction workspace. quant-vla replaces that workflow with project-level configuration variables and a single public entrypoint.
 
 Use the current documentation instead:
 

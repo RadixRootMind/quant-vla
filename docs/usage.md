@@ -5,7 +5,7 @@ This document covers the unified benchmark entrypoint after dependencies and che
 ## 1. Load Your Environment
 
 ```bash
-cd /path/to/Awesome-quant-vla
+cd /path/to/quant-vla
 source .env.local
 conda activate "$AWESOME_QVLA_CONDA_ENV"
 ```
@@ -13,7 +13,7 @@ conda activate "$AWESOME_QVLA_CONDA_ENV"
 If you do not use `.env.local`, export the variables manually:
 
 ```bash
-export AWESOME_QVLA_ROOT=/path/to/Awesome-quant-vla
+export AWESOME_QVLA_ROOT=/path/to/quant-vla
 export QUANTVLA_ROOT=$AWESOME_QVLA_ROOT
 export AWESOME_QVLA_CONDA_ENV=awesome_quant_vla
 export QUANTVLA_CONDA_ENV=$AWESOME_QVLA_CONDA_ENV

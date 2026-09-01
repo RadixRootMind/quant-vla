@@ -6,7 +6,7 @@ This page contains the detailed setup steps. The paths below use variables so us
 
 ```bash
 export WORKSPACE=${WORKSPACE:-$HOME/VLM_REPO}
-export AWESOME_QVLA_ROOT=$WORKSPACE/Awesome-quant-vla
+export AWESOME_QVLA_ROOT=$WORKSPACE/quant-vla
 export CHECKPOINTS_ROOT=$WORKSPACE/checkpoints
 export LIBERO_ROOT=$WORKSPACE/LIBERO
 export OPENPI_ROOT=$WORKSPACE/openpi
@@ -17,7 +17,7 @@ Clone the repository:
 ```bash
 mkdir -p "$WORKSPACE"
 cd "$WORKSPACE"
-git clone <your-repo-url> Awesome-quant-vla
+git clone <your-repo-url> quant-vla
 cd "$AWESOME_QVLA_ROOT"
 
 cp .env.example .env.local
@@ -77,7 +77,15 @@ PY
 cd "$WORKSPACE"
 git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git "$LIBERO_ROOT"
 conda activate awesome_quant_vla
-python -m pip install -e "$LIBERO_ROOT"
+if [ -f "$LIBERO_ROOT/setup.py" ] || [ -f "$LIBERO_ROOT/pyproject.toml" ]; then
+  python -m pip install -e "$LIBERO_ROOT"
+elif [ -f "$LIBERO_ROOT/libero/setup.py" ] || [ -f "$LIBERO_ROOT/libero/pyproject.toml" ]; then
+  python -m pip install -e "$LIBERO_ROOT/libero"
+else
+  echo "Cannot find LIBERO setup.py or pyproject.toml under $LIBERO_ROOT"
+  find "$LIBERO_ROOT" -maxdepth 3 \( -name setup.py -o -name pyproject.toml \) -print
+  exit 1
+fi
 ```
 
 Verify:
@@ -228,7 +236,7 @@ If `CONDA_PREFIX` is still wrong, set `CONDA_ROOT` in `.env.local` to the actual
 
 The project launchers intentionally refuse to fall back to `/usr/bin/python` when `CONDA_PREFIX` is set but `$CONDA_PREFIX/bin/python` is missing. Running with the system Python usually hides packages installed in the conda environment and makes benchmark failures harder to diagnose.
 
-If GR00T server startup fails with `cannot import name 'VideoInput' from 'transformers.image_utils'`, `cannot import name 'BASE_IMAGE_PROCESSOR_FAST_DOCSTRING'`, or `dictionary update sequence element #0 has length ...`, update to a project revision that contains the Eagle processor compatibility fixes in `gr00t/model/transforms.py`. These issues are caused by Hugging Face remote processor code expecting different `transformers` internal import locations or return-value conventions. Awesome-quant-vla keeps Eagle's required fast image processor path enabled and installs small compatibility aliases before loading the remote processor.
+If GR00T server startup fails with `cannot import name 'VideoInput' from 'transformers.image_utils'`, `cannot import name 'BASE_IMAGE_PROCESSOR_FAST_DOCSTRING'`, or `dictionary update sequence element #0 has length ...`, update to a project revision that contains the Eagle processor compatibility fixes in `gr00t/model/transforms.py`. These issues are caused by Hugging Face remote processor code expecting different `transformers` internal import locations or return-value conventions. quant-vla keeps Eagle's required fast image processor path enabled and installs small compatibility aliases before loading the remote processor.
 
 
 ## 7. OpenVLA/QVLA Environment

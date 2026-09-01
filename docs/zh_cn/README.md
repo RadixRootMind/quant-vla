@@ -1,6 +1,6 @@
 # quant-vla 中文说明
 
-quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化与 LIBERO 评测的工程化仓库。当前代码把 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT 和 OpenDriveLab/UniVLA 相关路线统一到一个项目中，提供统一入口、统一路径约定、统一结果输出和可复现实验记录。
+quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化与 LIBERO 评测的工程化仓库。当前代码把 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA 和 StarVLA 相关路线统一到一个项目中，提供统一入口、统一路径约定、统一结果输出和可复现实验记录。
 
 > 说明：本仓库仍处于工程整合与验证阶段。当前重点是研究复现、量化评测、路线统一和国产算力适配前的准备工作。大型 checkpoint、量化 pack、数据集和评测输出不会提交到 git。
 
@@ -17,6 +17,7 @@ quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化�
 - [Checkpoints 与量化包](checkpoints.md)
 - [验证步骤](verification.md)
 - [UniVLA 说明](univla.md)
+- [StarVLA 接入说明](starvla.md)
 - [英文安装说明](../installation.md)
 
 ## 社群
@@ -45,6 +46,8 @@ quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化�
 | OpenVLA-OFT | `openvla_oft_fp16` | OpenVLA-OFT FP16 baseline。 |
 | OpenVLA-OFT | `openvla_oft_qvla_w8` | OpenVLA-OFT QVLA mixed-bit W8 评测。 |
 | UniVLA | `univla_fp16` | UniVLA FP16 LIBERO 评测，依赖独立 action decoder。 |
+| StarVLA-OFT | `starvla_oft_fp16` | StarVLA-OFT FP16/BF16 LIBERO 评测，已完成 spatial 完整验证。 |
+| StarVLA | `starvla_gr00t_fp16`, `starvla_pi_fp16`, `starvla_fast_fp16` | 已接入 FP16/BF16 入口，需要对应 checkpoint；量化路线待后续适配 Qwen-VL/action head。 |
 
 ## 已验证结果
 
@@ -60,6 +63,7 @@ quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化�
 | `openvla_oft_fp16` | OpenVLA-OFT | LIBERO Spatial | FP16 baseline | 60.0% |
 | `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | QVLA mixed-bit W8 | 26.0% |
 | `univla_fp16` | UniVLA | LIBERO Spatial | FP16 + action decoder | 96.0% |
+| `starvla_oft_fp16` | StarVLA-OFT | LIBERO Spatial | FP16/BF16 policy-server 评测 | 99.0% |
 
 ## 验证环境
 
@@ -151,6 +155,8 @@ $CHECKPOINTS_ROOT/
   openvla-7b-finetuned-libero-spatial/
   openvla-7b-oft-finetuned-libero-spatial/
   univla-7b-224-sft-libero/
+  starvla/Qwen3-VL-OFT-LIBERO-4in1/
+  starvla/Qwen3-VL-4B-Instruct/
 ```
 
 W4A4 GPTQ 路线还需要量化 pack：
@@ -170,6 +176,7 @@ $AWESOME_QVLA_ROOT/results/packs/
 - `groot_w4a4_gptq`、`pi05_w4a4_gptq` 属于 W4A4 GPTQ pack 路线，必须准备对应 `quantized.pt`。
 - QVLA W8 路线会生成校准 JSONL、Hessian proxy、gate/bit allocation 和评测结果；其中 `proxy.pt` 是敏感度分析产物，不是可直接部署的量化模型。
 - Pi0.5 需要先用 OpenPI 把官方 JAX/Orbax checkpoint 转成 PyTorch checkpoint。
+- StarVLA 当前以 FP16/BF16 policy-server 评测链路为主，完整验证结果为 99.0%；W4A8/W4A4 量化路线需要后续适配 Qwen-VL/action head。
 
 具体下载与转换步骤见 [checkpoints.md](checkpoints.md)。
 
@@ -246,6 +253,23 @@ bash scripts/run_awesome_quant_vla.sh univla_fp16 \
   --univla-action-decoder "$UNIVLA_ACTION_DECODER"
 ```
 
+运行 StarVLA-OFT FP16/BF16：
+
+```bash
+conda activate awesome_qvla_starvla
+cd "$AWESOME_QVLA_ROOT"
+source .env.local
+
+bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
+  --suite spatial \
+  --gpus 0 \
+  --trials 10 \
+  --port-base 8200 \
+  --starvla-python "$STARVLA_PYTHON" \
+  --starvla-checkpoint "$STARVLA_CKPT" \
+  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final"
+```
+
 查看结果：
 
 ```bash
@@ -297,6 +321,7 @@ bash -n scripts/run_groot_benchmark.sh
 bash -n scripts/run_pi05_libero_benchmark.sh
 bash -n scripts/run_openvla_qvla.sh
 bash -n scripts/run_univla_libero.sh
+bash -n scripts/run_starvla_libero.sh
 
 PYTHONPATH=. python -m compileall -q gr00t tools scripts examples
 ```
@@ -323,11 +348,12 @@ quant-vla
 |-- third_party/
 |   |-- openvla
 |   |-- openvla_oft
-|   `-- univla
+|   |-- univla
+|   `-- starvla
 |-- tests/
 `-- results/
 ```
 
 ## 来源与致谢
 
-quant-vla 整合并适配了 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenDriveLab/UniVLA、OpenPI 和 LIBERO 等项目中的思路与代码路径。使用或再分发相关组件时，请同时核对原项目的许可证与引用要求。
+quant-vla 整合并适配了 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenDriveLab/UniVLA、StarVLA、OpenPI 和 LIBERO 等项目中的思路与代码路径。使用或再分发相关组件时，请同时核对原项目的许可证与引用要求。

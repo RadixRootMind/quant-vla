@@ -1,0 +1,46 @@
+# Vendored StarVLA runtime artifacts.
+# Keep source, configs, and docs trackable inside quant-vla.
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+.env
+.env.*
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+.DS_Store
+
+# Runtime outputs and large assets.
+playground/
+results/
+checkpoints/
+ckpts/
+debug/
+tmp/
+temp/
+logs/
+wandb/
+nohup.out
+*.out
+*.log
+MUJOCO_LOG.TXT
+
+# Model/data/result binaries should stay outside git.
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.onnx
+*.engine
+*.mp4
+*.npy
+*.npz
+*.parquet

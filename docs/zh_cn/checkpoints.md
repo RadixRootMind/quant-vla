@@ -1,11 +1,11 @@
 # Checkpoint 与量化 Pack
 
-Awesome-quant-vla 不提交模型权重、LIBERO 数据集和量化 pack。建议把基础 checkpoint 放在 `$CHECKPOINTS_ROOT`，把 W4A4 GPTQ pack 放在 `$AWESOME_QVLA_ROOT/results/packs`。
+quant-vla 不提交模型权重、LIBERO 数据集和量化 pack。建议把基础 checkpoint 放在 `$CHECKPOINTS_ROOT`，把 W4A4 GPTQ pack 放在 `$AWESOME_QVLA_ROOT/results/packs`。
 
 ## 1. 路径约定
 
 ```bash
-cd /path/to/Awesome-quant-vla
+cd /path/to/quant-vla
 source .env.local
 
 echo "AWESOME_QVLA_ROOT=$AWESOME_QVLA_ROOT"
@@ -22,7 +22,7 @@ WORKSPACE=<当前仓库的上一级目录>
 CHECKPOINTS_ROOT=$WORKSPACE/checkpoints
 ```
 
-如果仓库在 `/root/VLM_REPO/Awesome-quant-vla`，默认 checkpoint 目录就是：
+如果仓库在 `/root/VLM_REPO/quant-vla`，默认 checkpoint 目录就是：
 
 ```bash
 /root/VLM_REPO/checkpoints
@@ -40,6 +40,8 @@ $CHECKPOINTS_ROOT/
   openvla-7b-finetuned-libero-spatial/
   openvla-7b-oft-finetuned-libero-spatial/
   univla-7b-224-sft-libero/
+  starvla/Qwen3-VL-OFT-LIBERO-4in1/
+  starvla/Qwen3-VL-4B-Instruct/
 
 $AWESOME_QVLA_ROOT/results/packs/
   gr00t_object/quantized.pt
@@ -49,7 +51,7 @@ $AWESOME_QVLA_ROOT/results/packs/
   pi05_object/quantized.pt
 ```
 
-`CHECKPOINTS_ROOT` 只是一种约定。运行时也可以通过 `--groot-checkpoint`、`--openpi-checkpoint`、`--openvla-checkpoint`、`--univla-checkpoint`、`--groot-gptq-pack`、`--pi05-gptq-pack` 指定实际路径。
+`CHECKPOINTS_ROOT` 只是一种约定。运行时也可以通过 `--groot-checkpoint`、`--openpi-checkpoint`、`--openvla-checkpoint`、`--univla-checkpoint`、`--univla-action-decoder`、`--starvla-checkpoint`、`--groot-gptq-pack`、`--pi05-gptq-pack` 指定实际路径。
 
 ## 2. GR00T-N1.5 Checkpoint
 
@@ -209,7 +211,50 @@ test -f "$UNIVLA_ACTION_DECODER" && echo "UniVLA action decoder ok"
 
 如果 action decoder 不在 checkpoint 目录内，运行时用 `--univla-action-decoder /path/to/action_decoder.pt` 指定。
 
-## 6. W4A4 GPTQ Pack
+## 6. StarVLA Checkpoint
+
+StarVLA-OFT 需要一个 policy checkpoint，同时还会按上游 StarVLA 的默认路径加载 Qwen3-VL 基座模型。
+
+建议目录结构：
+
+```bash
+$CHECKPOINTS_ROOT/
+  starvla/
+    Qwen3-VL-OFT-LIBERO-4in1/
+      checkpoints/steps_50000_pytorch_model.pt
+    Qwen3-VL-4B-Instruct/
+```
+
+下载 StarVLA-OFT LIBERO checkpoint：
+
+```bash
+mkdir -p "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-OFT-LIBERO-4in1"
+hf download StarVLA/Qwen3-VL-OFT-LIBERO-4in1 \
+  --local-dir "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-OFT-LIBERO-4in1"
+```
+
+下载 Qwen3-VL 基座模型，并链接到 StarVLA 期望的位置：
+
+```bash
+mkdir -p "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-4B-Instruct"
+hf download Qwen/Qwen3-VL-4B-Instruct \
+  --local-dir "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-4B-Instruct"
+
+mkdir -p "$AWESOME_QVLA_ROOT/third_party/starvla/playground/Pretrained_models"
+ln -sfn "$CHECKPOINTS_ROOT/starvla/Qwen3-VL-4B-Instruct" \
+  "$AWESOME_QVLA_ROOT/third_party/starvla/playground/Pretrained_models/Qwen3-VL-4B-Instruct"
+```
+
+验证：
+
+```bash
+export STARVLA_CKPT="$CHECKPOINTS_ROOT/starvla/Qwen3-VL-OFT-LIBERO-4in1/checkpoints/steps_50000_pytorch_model.pt"
+
+test -f "$STARVLA_CKPT" && echo "StarVLA policy checkpoint ok"
+test -d "$AWESOME_QVLA_ROOT/third_party/starvla/playground/Pretrained_models/Qwen3-VL-4B-Instruct" && echo "Qwen3-VL base link ok"
+```
+
+## 7. W4A4 GPTQ Pack
 
 W4A8 runtime 路线不需要提前准备 pack。W4A4 GPTQ 路线需要 `quantized.pt`。
 
@@ -245,7 +290,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 如果 `--include` 下载不到文件，直接不加 `--include` 下载整个 pack 仓库，这是之前验证过更稳的方式。
 
-## 7. 手动指定 Pack
+## 8. 手动指定 Pack
 
 ```bash
 bash scripts/run_awesome_quant_vla.sh groot_w4a4_gptq \
@@ -258,7 +303,7 @@ bash scripts/run_awesome_quant_vla.sh pi05_w4a4_gptq \
   --pi05-gptq-pack /path/to/pi05_object/quantized.pt
 ```
 
-## 8. 本地构建 Pack
+## 9. 本地构建 Pack
 
 仓库保留了 pack 构建工具：
 

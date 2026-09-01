@@ -1,6 +1,6 @@
 # OpenVLA/QVLA 路线说明
 
-Awesome-quant-vla 已经把 AutoLab-SAI-SJTU/QVLA 中的 OpenVLA/OpenVLA-OFT 路线作为第三个项目族合并进来。
+quant-vla 已经把 AutoLab-SAI-SJTU/QVLA 中的 OpenVLA/OpenVLA-OFT 路线作为第三个项目族合并进来。
 
 ## 已集成后端
 
@@ -18,7 +18,7 @@ Awesome-quant-vla 已经把 AutoLab-SAI-SJTU/QVLA 中的 OpenVLA/OpenVLA-OFT 路
 - `tools/qvla/greedy_bit_allocator.py` 负责按目标平均 bit 分配层 bit。
 - `tools/qvla/run_eval.py` 先按原项目方式加载 OpenVLA/OpenVLA-OFT，再注入 QVLA fake-weight 配置并执行 LIBERO 评测。
 
-这条路线尽量复用原 OpenVLA/OpenVLA-OFT 的模型加载和评测逻辑，只把量化控制、输出目录和统一入口接入 Awesome-quant-vla。
+这条路线尽量复用原 OpenVLA/OpenVLA-OFT 的模型加载和评测逻辑，只把量化控制、输出目录和统一入口接入 quant-vla。
 
 ## 当前验证结果
 

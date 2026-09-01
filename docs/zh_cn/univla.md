@@ -1,8 +1,8 @@
 # UniVLA 说明
 
-Awesome-quant-vla 已将 OpenDriveLab/UniVLA 作为第四类后端接入。
+quant-vla 已将 OpenDriveLab/UniVLA 作为第四类后端接入。
 
-当前集成的是 UniVLA 的 LIBERO FP16 评测路线。UniVLA 源码中也包含 QVLA 相关脚本，但 Awesome-quant-vla 暂时不把 UniVLA 量化路线标记为已验证功能，因为 UniVLA 评测除了 latent action 生成，还依赖独立的 action decoder。
+当前集成的是 UniVLA 的 LIBERO FP16 评测路线。UniVLA 源码中也包含 QVLA 相关脚本，但 quant-vla 暂时不把 UniVLA 量化路线标记为已验证功能，因为 UniVLA 评测除了 latent action 生成，还依赖独立的 action decoder。
 
 ## 已接入文件
 

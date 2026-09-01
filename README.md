@@ -1,6 +1,6 @@
 # quant-vla
 
-quant-vla is an open-source engineering stack for Vision-Language-Action (VLA) post-training quantization and LIBERO evaluation. It brings QuantVLA, Omega-QVLA, QVLA/OpenVLA, and OpenDriveLab/UniVLA style routes into one repository with a shared launcher, shared asset conventions, and reproducible validation notes.
+quant-vla is an open-source engineering stack for Vision-Language-Action (VLA) post-training quantization and LIBERO evaluation. It brings QuantVLA, Omega-QVLA, QVLA/OpenVLA, OpenDriveLab/UniVLA, and StarVLA style routes into one repository with a shared launcher, shared asset conventions, and reproducible validation notes.
 
 > This repository is under active development. The current focus is research reproduction, quantized evaluation, and hardware-portability preparation. Large checkpoints, quantized packs, datasets, and generated benchmark outputs are intentionally kept outside git.
 
@@ -17,6 +17,7 @@ Day-one workflow:
 - [Checkpoints and Quantized Packs](docs/checkpoints.md)
 - [Verification Guide](docs/verification.md)
 - [UniVLA Guide](docs/univla.md)
+- [StarVLA Guide](docs/starvla.md)
 - [Chinese Documentation](docs/zh_cn/README.md)
 
 ## Community
@@ -31,11 +32,12 @@ Join the RadixRootMind China developer WeChat group:
 
 | Surface | Purpose | Entry point |
 | --- | --- | --- |
-| Unified profile launcher | One command surface for GR00T, Pi0.5/OpenPI, OpenVLA, OpenVLA-OFT, and UniVLA routes. | `scripts/run_awesome_quant_vla.sh` |
+| Unified profile launcher | One command surface for GR00T, Pi0.5/OpenPI, OpenVLA, OpenVLA-OFT, UniVLA, and StarVLA routes. | `scripts/run_awesome_quant_vla.sh` |
 | GR00T evaluation | LIBERO evaluation for GR00T-N1.5 FP16, W4A8, W4A4 GPTQ, W4A4 DuQuant, and W4A4 RTN routes. | `scripts/run_groot_benchmark.sh` |
 | Pi0.5/OpenPI evaluation | LIBERO evaluation through OpenPI service mode, with FP16, W4A8, W4A4 GPTQ, and W4A4 RTN profiles. | `scripts/run_pi05_libero_benchmark.sh` |
 | OpenVLA/QVLA evaluation | QVLA-style calibration, Hessian proxy, bit assignment, fake-weight injection, and LIBERO evaluation. | `scripts/run_openvla_qvla.sh`, `tools/qvla/` |
 | UniVLA evaluation | UniVLA LIBERO FP16 evaluation with a separate latent-action decoder. | `scripts/run_univla_libero.sh` |
+| StarVLA evaluation | StarVLA LIBERO FP16/BF16 evaluation through the StarVLA websocket policy server. | `scripts/run_starvla_libero.sh` |
 | Quantization utilities | Runtime quantization wrappers, GPTQ pack builders, SVD/SVD-Hadamard utilities, and pack merge helpers. | `gr00t/quantization/`, `tools/` |
 | Documentation | Reproducible setup, checkpoint layout, known fixes, and frozen validation results. | `docs/` |
 
@@ -50,6 +52,7 @@ The matrix below summarizes the routes currently exposed through the unified lau
 | OpenVLA | `openvla_fp16`, `openvla_qvla_w8` | Supports FP16 and QVLA mixed-bit W8 evaluation. |
 | OpenVLA-OFT | `openvla_oft_fp16`, `openvla_oft_qvla_w8` | Supports FP16 and QVLA mixed-bit W8 evaluation. |
 | UniVLA | `univla_fp16` | FP16 route is validated with an external action decoder. Quantized UniVLA evaluation is not yet advertised as a verified route. |
+| StarVLA | `starvla_oft_fp16`, `starvla_gr00t_fp16`, `starvla_pi_fp16`, `starvla_fast_fp16` | `starvla_oft_fp16` is validated on LIBERO Spatial. Other FP16/BF16 entries require matching StarVLA checkpoints. Quantized StarVLA routes require a future Qwen-VL/action-head adapter before being advertised as validated. |
 
 ## Validation Snapshot
 
@@ -65,6 +68,7 @@ These are local engineering validation results after the merge. They show that t
 | `openvla_oft_fp16` | OpenVLA-OFT | LIBERO Spatial | FP16 baseline | 60.0% |
 | `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | QVLA mixed-bit W8 | 26.0% |
 | `univla_fp16` | UniVLA | LIBERO Spatial | FP16 with action decoder | 96.0% |
+| `starvla_oft_fp16` | StarVLA-OFT | LIBERO Spatial | FP16/BF16 policy-server evaluation | 99.0% |
 
 ## Verified Environment
 
@@ -156,6 +160,8 @@ $CHECKPOINTS_ROOT/
   openvla-7b-finetuned-libero-spatial/
   openvla-7b-oft-finetuned-libero-spatial/
   univla-7b-224-sft-libero/
+  starvla/Qwen3-VL-OFT-LIBERO-4in1/
+  starvla/Qwen3-VL-4B-Instruct/
 ```
 
 W4A4 GPTQ profiles also need quantized packs:
@@ -251,6 +257,23 @@ bash scripts/run_awesome_quant_vla.sh univla_fp16 \
   --univla-action-decoder "$UNIVLA_ACTION_DECODER"
 ```
 
+Run StarVLA-OFT FP16/BF16:
+
+```bash
+conda activate awesome_qvla_starvla
+cd "$AWESOME_QVLA_ROOT"
+source .env.local
+
+bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
+  --suite spatial \
+  --gpus 0 \
+  --trials 10 \
+  --port-base 8200 \
+  --starvla-python "$STARVLA_PYTHON" \
+  --starvla-checkpoint "$STARVLA_CKPT" \
+  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final"
+```
+
 Read a saved result:
 
 ```bash
@@ -323,6 +346,20 @@ OpenVLA/QVLA and UniVLA are best kept in a separate environment:
 | numpy | 1.26.4 |
 | opencv-python-headless | 4.9.0.80 |
 
+
+StarVLA is best kept in a third environment because it uses a newer Qwen/Transformers stack:
+
+| Component | Recommended version |
+| --- | --- |
+| Environment | `awesome_qvla_starvla` |
+| Python | 3.10 |
+| transformers | 4.57.1 |
+| accelerate | 1.5.2 |
+| torchvision | 0.21.0 |
+| deepspeed | 0.16.9 |
+| numpy | 1.26.4 |
+| StarVLA checkpoint format | `steps_XXXXX_pytorch_model.pt` |
+
 ## Development Checks
 
 Before pushing a route or claiming a validation result, run lightweight checks first:
@@ -333,6 +370,7 @@ bash -n scripts/run_groot_benchmark.sh
 bash -n scripts/run_pi05_libero_benchmark.sh
 bash -n scripts/run_openvla_qvla.sh
 bash -n scripts/run_univla_libero.sh
+bash -n scripts/run_starvla_libero.sh
 
 PYTHONPATH=. python -m compileall -q gr00t tools scripts examples
 ```
@@ -359,7 +397,8 @@ quant-vla
 |-- third_party/
 |   |-- openvla                          # OpenVLA backend snapshot
 |   |-- openvla_oft                      # OpenVLA-OFT backend snapshot
-|   `-- univla                           # UniVLA backend snapshot
+|   |-- univla                           # UniVLA backend snapshot
+|   `-- starvla                          # StarVLA backend snapshot
 |-- tests/                               # Lightweight regression checks
 `-- results/                             # Local outputs, packs, and run artifacts; ignored by git
 ```
@@ -380,4 +419,5 @@ It does not bundle large checkpoints or datasets. It also does not claim that ev
 
 ## Lineage And Credits
 
-quant-vla integrates and adapts ideas and code paths from QuantVLA, Omega-QVLA, QVLA/OpenVLA, OpenDriveLab/UniVLA, OpenPI, and LIBERO. Please check the original repositories and licenses when using or redistributing derived components.
+quant-vla integrates and adapts ideas and code paths from QuantVLA, Omega-QVLA, QVLA/OpenVLA, OpenDriveLab/UniVLA, StarVLA, OpenPI, and LIBERO. Please check the original repositories and licenses when using or redistributing derived components.
+

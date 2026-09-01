@@ -1,6 +1,6 @@
 # Merge Notes
 
-This freeze records the current code-level integration state before the next UniVLA merge phase.
+This document records the current code-level integration state for `quant-vla` after the QuantVLA, Omega-QVLA, QVLA/OpenVLA, UniVLA, and StarVLA merge work.
 
 ## Merged Project Families
 
@@ -8,28 +8,29 @@ This freeze records the current code-level integration state before the next Uni
 | --- | --- | --- |
 | QuantVLA | Integrated | `gr00t/quantization/`, `scripts/run_groot_benchmark.sh`, `scripts/run_awesome_quant_vla.sh` |
 | Omega-QVLA | Integrated | GPTQ builders, Pi0.5 runtime/eval scripts, W4A4 pack route |
-| QVLA/OpenVLA | Integrated | `third_party/openvla`, `third_party/openvla_oft`, `tools/qvla`, `scripts/run_openvla_qvla.sh` |
-| UniVLA | Not merged yet | Local source identified as `D:\VLA\QVLA\UniVLA` / OpenDriveLab/UniVLA |
+| QVLA/OpenVLA | Integrated and validated | `third_party/openvla`, `third_party/openvla_oft`, `tools/qvla`, `scripts/run_openvla_qvla.sh` |
+| OpenDriveLab/UniVLA | Integrated and validated | `third_party/univla`, `scripts/run_univla_libero.sh` |
+| StarVLA | Integrated and validated for StarVLA-OFT FP16/BF16 | `third_party/starvla`, `scripts/run_starvla_libero.sh`, `tools/starvla/` |
 
 ## Current Validation Baseline
 
-- GR00T-N1.5 W4A8 on LIBERO Object: 82.0%.
-- Pi0.5 W4A8 on LIBERO Object: 99.0%.
-- Pi0.5 W4A4 GPTQ on LIBERO Object: 98.0%.
-- OpenVLA FP16 on LIBERO Spatial: 70.0%.
-- OpenVLA QVLA W8 on LIBERO Spatial: 80.0%.
-- OpenVLA-OFT FP16 on LIBERO Spatial: 60.0%.
-- OpenVLA-OFT QVLA W8 on LIBERO Spatial: 26.0%.
+These are local engineering validation results, not official paper benchmark numbers.
 
-## UniVLA Identification
+| Profile | Model | Suite | Result |
+| --- | --- | --- | ---: |
+| `groot_w4a8` | GR00T-N1.5 | LIBERO Object | 82.0% |
+| `pi05_w4a8_duquant` | Pi0.5/OpenPI | LIBERO Object | 99.0% |
+| `pi05_w4a4_gptq` | Pi0.5/OpenPI | LIBERO Object | 98.0% |
+| `openvla_fp16` | OpenVLA | LIBERO Spatial | 70.0% |
+| `openvla_qvla_w8` | OpenVLA | LIBERO Spatial | 80.0% |
+| `openvla_oft_fp16` | OpenVLA-OFT | LIBERO Spatial | 60.0% |
+| `openvla_oft_qvla_w8` | OpenVLA-OFT | LIBERO Spatial | 26.0% |
+| `univla_fp16` | UniVLA | LIBERO Spatial | 96.0% |
+| `starvla_oft_fp16` | StarVLA-OFT | LIBERO Spatial | 99.0% |
 
-The local `D:\VLA\QVLA\UniVLA` directory corresponds to OpenDriveLab/UniVLA:
+## Notes
 
-- README title: `UniVLA`.
-- Project site: `opendrivelab.com`.
-- Paper: `https://arxiv.org/pdf/2505.06111`.
-- Upstream clone command in README: `git clone git@github.com:OpenDriveLab/UniVLA.git`.
-- Hugging Face models in README use the `qwbu/univla-*` namespace.
-
-It is a generalist VLA project with a task-centric latent action model. It should be merged as a fourth backend family after this freeze, not folded into the existing OpenVLA/QVLA route blindly.
-
+- GR00T and Pi0.5 W4A8 routes use runtime quantization and do not require a prebuilt `quantized.pt` pack.
+- GR00T and Pi0.5 W4A4 GPTQ routes require prebuilt or locally generated `quantized.pt` packs.
+- OpenVLA/QVLA routes generate calibration, proxy, gate, and bit-allocation artifacts; `proxy.pt` is an analysis artifact, not a standalone deployable quantized model.
+- UniVLA and StarVLA are currently exposed as validated FP16/BF16 LIBERO evaluation routes. Quantized variants need additional action-decoder or Qwen-VL/action-head-aware adapters before being marked as validated.
