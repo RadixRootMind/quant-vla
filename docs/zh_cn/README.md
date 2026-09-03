@@ -1,59 +1,78 @@
 # quant-vla 中文说明
 
-quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化与 LIBERO 评测的工程化仓库。当前代码把 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA 和 StarVLA 相关路线统一到一个项目中，提供统一入口、统一路径约定、统一结果输出和可复现实验记录。
+quant-vla 是一个面向 Vision-Language-Action（VLA）模型量化、LIBERO 评测与硬件适配准备的统一研究与工程项目。
 
-> 说明：本仓库仍处于工程整合与验证阶段。当前重点是研究复现、量化评测、路线统一和国产算力适配前的准备工作。大型 checkpoint、量化 pack、数据集和评测输出不会提交到 git。
+本项目把 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA、StarVLA、GR00T-N1.5、Pi0.5/OpenPI 等相关路线整合到同一个仓库中，并提供统一的启动入口、checkpoint 约定、输出结构和验证说明。
 
-推荐工作流：
+> quant-vla 仍处于持续开发阶段。大型 checkpoint、量化 pack、数据集和评测输出不会提交到 git。
 
-1. 准备环境与资产：创建 conda 环境，把 checkpoint、LIBERO 数据和量化 pack 放到仓库外部路径。
-2. 先看计划：用 `--action plan` 检查路径、GPU、端口、checkpoint 和量化方式是否正确。
-3. 启动评测：用统一脚本运行指定模型与量化路线。
-4. 查看结果：以 `merged_summary.json` 和 `merged_summary.md` 为准，同时检查日志、rollout、校准文件和 pack。
+## 为什么要合一？
 
-## 文档入口
+VLA 模型不同于普通 LLM 或 VLM。它把视觉感知、语言理解、机器人状态和动作生成放在同一个具身策略中，最终输出的是可执行的机器人动作。因此，低比特量化带来的一个小数值误差，可能会从视觉编码传播到语义理解、动作解码、轨迹生成、接触动力学和闭环控制，最终表现为任务失败。
 
-- [English README](../../README.md)
-- [Checkpoints 与量化包](checkpoints.md)
-- [验证步骤](verification.md)
-- [UniVLA 说明](univla.md)
-- [StarVLA 接入说明](starvla.md)
-- [英文安装说明](../installation.md)
+这意味着 VLA 量化不能只看模型大小、重构误差或 token 预测精度。一个可用的 VLA 量化系统，还需要关注动作保真度、时间稳定性、语义动作对齐，以及 LIBERO 或真实机器人任务中的闭环成功率。
 
-## 社群
+当前 VLA 量化相关工作分散在不同项目中，模型族、依赖环境、checkpoint 结构、量化产物和评测脚本都不一致。quant-vla 的目标不是简单堆叠代码，而是把这些路线整理成可复现、可比较、可扩展的统一工程入口。
 
-加入 RadixRootMind 中国区开发者微信群：
+## 如果不合一会有什么问题？
 
-<p align="center">
-  <img src="../../assets/radixrootmind-wechat-group.png" alt="RadixRootMind 中国区开发者微信群二维码" width="360">
-</p>
+| 分散点 | 实际影响 |
+| --- | --- |
+| 每个上游项目都有自己的启动脚本 | 用户需要反复修改路径、端口、任务参数和运行逻辑。 |
+| 依赖环境相互冲突 | GR00T/Pi0.5、OpenVLA、UniVLA、StarVLA 往往需要不同 Python、PyTorch 和 Transformers 版本。 |
+| checkpoint 和 pack 目录不统一 | 一台机器能跑通的命令，很难在另一台机器稳定复现。 |
+| 量化产物语义不清 | runtime quantization、`quantized.pt`、proxy、gates、calib、act_stats 容易被混为最终模型。 |
+| benchmark 设置分散 | LIBERO suite、task id、trials、init offset、视频保存和日志位置都会影响结果。 |
+| 缺少硬件适配边界 | 迁移到 DCU、NPU、IPU 等平台时，模型、算子、量化产物和 runtime 边界不清晰。 |
 
-## 当前支持能力
+quant-vla 通过统一 profile、launcher、路径约定、日志、summary 和文档，降低复现和继续开发的成本。
 
-| 模型路线 | Profile | 说明 |
+## 设计视角
+
+本项目按照 VLA 推理链路来理解量化：
+
+```text
+观测图像 + 语言指令
+        |
+        v
+视觉编码器 -> LLM/VLM 主干 -> 动作头 / 动作解码器
+        |              |              |
+        |              |              v
+        |              |        可执行机器人动作
+        |              |
+        v              v
+校准、敏感度分析、旋转、运行时量化、GPTQ pack、混合比特分配
+```
+
+因此，本项目更关注行为保持，而不只是张量压缩。每条路线都会尽量明确模型来源、量化方式、校准数据、评测 suite 和输出产物含义。
+
+## 项目提供什么？
+
+| 层级 | 作用 |
+| --- | --- |
+| 统一路线入口 | 使用同一个脚本入口管理 GR00T、Pi0.5/OpenPI、OpenVLA、OpenVLA-OFT、UniVLA 和 StarVLA。 |
+| 量化路线整合 | 覆盖 W4A8、W4A4、GPTQ、RTN、DuQuant、QVLA mixed-bit W8 及相关校准流程。 |
+| LIBERO 评测 | 统一 task suite、rollout、日志和 merged summary 输出。 |
+| 产物规范化 | 统一 logs、summaries、rollouts、act_stats、packs、proxy、gates、calib 等输出位置。 |
+| 可复现说明 | 为主要路线保留环境、checkpoint、常见修复和验证结果。 |
+| 硬件适配准备 | 明确模型 checkpoint、量化路线、runtime 依赖和评测结果之间的边界。 |
+
+## 主路线矩阵
+
+| 模型族 | Profile | 量化 / 评测状态 |
 | --- | --- | --- |
-| GR00T-N1.5 | `groot_fp16` | FP16 baseline。 |
-| GR00T-N1.5 | `groot_w4a8` | W4A8 runtime DuQuant/ATM/OHB 量化评测，不需要预先生成 `quantized.pt`。 |
-| GR00T-N1.5 | `groot_w4a4_gptq` | W4A4 GPTQ/SVD-Hadamard pack 评测，需要已有或自行构建的 `quantized.pt`。 |
-| GR00T-N1.5 | `groot_w4a4_duquant` | W4A4 runtime DuQuant 评测。 |
-| GR00T-N1.5 | `groot_w4a4_rtn` | W4A4 RTN 评测。 |
-| Pi0.5/OpenPI | `pi05_fp16` | Pi0.5 FP16 baseline，使用 OpenPI service。 |
-| Pi0.5/OpenPI | `pi05_w4a8_duquant` | Pi0.5 W4A8 runtime DuQuant/ATM/OHB 量化评测。 |
-| Pi0.5/OpenPI | `pi05_w4a4_gptq` | Pi0.5 W4A4 GPTQ pack 评测，需要 `pi05_object/quantized.pt`。 |
-| Pi0.5/OpenPI | `pi05_w4a4_rtn` | Pi0.5 W4A4 RTN 评测。 |
-| OpenVLA | `openvla_fp16` | OpenVLA FP16 baseline。 |
-| OpenVLA | `openvla_qvla_w8` | QVLA mixed-bit W8 评测，生成 calibration、proxy、gate/bit allocation 等中间产物。 |
-| OpenVLA-OFT | `openvla_oft_fp16` | OpenVLA-OFT FP16 baseline。 |
-| OpenVLA-OFT | `openvla_oft_qvla_w8` | OpenVLA-OFT QVLA mixed-bit W8 评测。 |
-| UniVLA | `univla_fp16` | UniVLA FP16 LIBERO 评测，依赖独立 action decoder。 |
-| StarVLA-OFT | `starvla_oft_fp16` | StarVLA-OFT FP16/BF16 LIBERO 评测，已完成 spatial 完整验证。 |
-| StarVLA | `starvla_gr00t_fp16`, `starvla_pi_fp16`, `starvla_fast_fp16` | 已接入 FP16/BF16 入口，需要对应 checkpoint；量化路线待后续适配 Qwen-VL/action head。 |
+| GR00T-N1.5 | `groot_fp16`, `groot_w4a8`, `groot_w4a4_gptq`, `groot_w4a4_duquant`, `groot_w4a4_rtn` | 支持 FP16、runtime W4A8、W4A4 GPTQ pack、W4A4 DuQuant 和 W4A4 RTN。 |
+| Pi0.5/OpenPI | `pi05_fp16`, `pi05_w4a8_duquant`, `pi05_w4a4_gptq`, `pi05_w4a4_rtn` | 基于 OpenPI service 评测，支持 FP16、runtime W4A8、W4A4 GPTQ pack 和 W4A4 RTN。 |
+| OpenVLA | `openvla_fp16`, `openvla_qvla_w8` | 支持 FP16 baseline 和 QVLA mixed-bit W8 评测。 |
+| OpenVLA-OFT | `openvla_oft_fp16`, `openvla_oft_qvla_w8` | 支持 FP16 baseline 和 QVLA mixed-bit W8 评测。 |
+| UniVLA | `univla_fp16` | 支持带外部 action decoder 的 FP16 评测；量化路线暂不作为已验证路线发布。 |
+| StarVLA | `starvla_oft_fp16`, `starvla_gr00t_fp16`, `starvla_pi_fp16`, `starvla_fast_fp16` | StarVLA-OFT FP16/BF16 已验证；其它 FP16/BF16 路线需要对应 checkpoint；量化路线后续需要适配 Qwen-VL/action head。 |
 
 ## 已验证结果
 
-以下结果来自本仓库合并后的本地工程验证，用于证明路线能够端到端跑通；它们不是论文官方 benchmark 数字。
+以下结果来自合并后的本地工程验证，用于说明路线可以在本仓库中端到端跑通，不作为论文官方 benchmark 数字。
 
-| Profile | 模型 | Suite | 量化路线 | 结果 |
+| Profile | 模型 | Suite | 路线 | 结果 |
 | --- | --- | --- | --- | ---: |
 | `groot_w4a8` | GR00T-N1.5 | LIBERO Object | Runtime DuQuant/ATM/OHB | 82.0% |
 | `pi05_w4a8_duquant` | Pi0.5/OpenPI | LIBERO Object | Runtime DuQuant/ATM/OHB | 99.0% |
@@ -78,7 +97,7 @@ quant-vla 是一个面向 Vision-Language-Action（VLA）模型后训练量化�
 
 ## 快速开始
 
-克隆仓库并创建本地环境配置：
+详细安装、checkpoint 准备和分路线验证命令放在 `docs/` 目录中。README 只保留最小入口。
 
 ```bash
 git clone https://github.com/RadixRootMind/quant-vla.git quant-vla
@@ -86,255 +105,56 @@ cd quant-vla
 
 cp .env.example .env.local
 source .env.local
-```
 
-国内网络可按需设置 Hugging Face 镜像：
-
-```bash
-export HF_ENDPOINT=https://hf-mirror.com
-export HF_HUB_DISABLE_XET=1
-```
-
-创建 GR00T/Pi0.5 主环境：
-
-```bash
-conda create -n awesome_quant_vla python=3.10 -y
-conda activate awesome_quant_vla
-
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install -e ".[base]"
-python -m pip install "imageio[ffmpeg]" "huggingface_hub[cli]"
-```
-
-准备 LIBERO 路径：
-
-```bash
-mkdir -p "$LIBERO_ROOT/datasets" "$LIBERO_CONFIG_PATH"
-
-cat > "$LIBERO_CONFIG_PATH/config.yaml" <<EOF
-benchmark_root: $LIBERO_ROOT/libero/libero
-bddl_files: $LIBERO_ROOT/libero/libero/bddl_files
-init_states: $LIBERO_ROOT/libero/libero/init_files
-datasets: $LIBERO_ROOT/datasets
-assets: $LIBERO_ROOT/libero/libero/assets
-EOF
-```
-
-检查 CUDA 与 PyTorch：
-
-```bash
-python - <<'PY'
-import torch
-print("torch:", torch.__version__)
-print("cuda:", torch.cuda.is_available())
-print("gpu:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "no cuda")
-PY
-```
-
-先跑一个 GR00T W4A8 小规模验证：
-
-```bash
 bash scripts/run_awesome_quant_vla.sh groot_w4a8 \
   --suite object \
   --gpus 0 \
   --trials 1 \
-  --init-offset 10
-```
-
-## Checkpoint 与量化 Pack
-
-checkpoint 和量化 pack 不进入 git。默认目录结构如下：
-
-```bash
-$CHECKPOINTS_ROOT/
-  gr00t-n1.5-libero-object-posttrain/
-  gr00t-n1.5-libero-spatial-posttrain/
-  gr00t-n1.5-libero-goal-posttrain/
-  gr00t-n1.5-libero-long-posttrain/
-  pi05_libero_pytorch/
-  openvla-7b-finetuned-libero-spatial/
-  openvla-7b-oft-finetuned-libero-spatial/
-  univla-7b-224-sft-libero/
-  starvla/Qwen3-VL-OFT-LIBERO-4in1/
-  starvla/Qwen3-VL-4B-Instruct/
-```
-
-W4A4 GPTQ 路线还需要量化 pack：
-
-```bash
-$AWESOME_QVLA_ROOT/results/packs/
-  gr00t_object/quantized.pt
-  gr00t_spatial/quantized.pt
-  gr00t_goal/quantized.pt
-  gr00t_long/quantized.pt
-  pi05_object/quantized.pt
-```
-
-路线差异：
-
-- `groot_w4a8`、`pi05_w4a8_duquant` 属于 runtime W4A8 路线，不需要提前准备 `quantized.pt`。
-- `groot_w4a4_gptq`、`pi05_w4a4_gptq` 属于 W4A4 GPTQ pack 路线，必须准备对应 `quantized.pt`。
-- QVLA W8 路线会生成校准 JSONL、Hessian proxy、gate/bit allocation 和评测结果；其中 `proxy.pt` 是敏感度分析产物，不是可直接部署的量化模型。
-- Pi0.5 需要先用 OpenPI 把官方 JAX/Orbax checkpoint 转成 PyTorch checkpoint。
-- StarVLA 当前以 FP16/BF16 policy-server 评测链路为主，完整验证结果为 99.0%；W4A8/W4A4 量化路线需要后续适配 Qwen-VL/action head。
-
-具体下载与转换步骤见 [checkpoints.md](checkpoints.md)。
-
-## 运行示例
-
-建议每条路线先执行 `--action plan`：
-
-```bash
-bash scripts/run_awesome_quant_vla.sh pi05_w4a8_duquant \
-  --suite object \
-  --gpus 0 \
-  --trials 10 \
   --action plan
 ```
 
-运行 Pi0.5 W4A8：
+推荐阅读顺序：
 
-```bash
-bash scripts/run_awesome_quant_vla.sh pi05_w4a8_duquant \
-  --suite object \
-  --gpus 0 \
-  --trials 10 \
-  --init-offset 10 \
-  --openpi-root "$OPENPI_ROOT" \
-  --openpi-py "$OPENPI_PY" \
-  --openpi-checkpoint "$CHECKPOINTS_ROOT/pi05_libero_pytorch"
-```
+- [英文安装说明](../installation.md)
+- [Checkpoint 与量化 Pack](checkpoints.md)
+- [验证指南](verification.md)
+- [UniVLA 说明](univla.md)
+- [StarVLA 说明](starvla.md)
+- [English README](../../README.md)
 
-运行 Pi0.5 W4A4 GPTQ：
+## Checkpoint 与产物
 
-```bash
-bash scripts/run_awesome_quant_vla.sh pi05_w4a4_gptq \
-  --suite object \
-  --gpus 0 \
-  --trials 10 \
-  --init-offset 10 \
-  --openpi-root "$OPENPI_ROOT" \
-  --openpi-py "$OPENPI_PY" \
-  --openpi-checkpoint "$CHECKPOINTS_ROOT/pi05_libero_pytorch" \
-  --pi05-gptq-pack "$AWESOME_QVLA_ROOT/results/packs/pi05_object/quantized.pt"
-```
+checkpoint 和量化 pack 不进入 git。通常把本地模型放到 `$CHECKPOINTS_ROOT`，把运行输出和下载的量化 pack 放到 `results/`。
 
-运行 OpenVLA QVLA W8：
+主要差异：
 
-```bash
-conda activate awesome_qvla_openvla
-cd "$AWESOME_QVLA_ROOT"
-source .env.local
-export OPENVLA_ATTN_IMPL=eager
+- `groot_w4a8`、`pi05_w4a8_duquant` 属于 runtime W4A8 路线，不需要提前准备 `quantized.pt`。
+- `groot_w4a4_gptq`、`pi05_w4a4_gptq` 属于 W4A4 GPTQ pack 路线，需要已有或自行构建的 `quantized.pt`。
+- QVLA W8 路线会生成 calibration JSONL、Hessian proxy、gate/bit allocation 和评测输出；`proxy.pt` 是分析产物，不是可直接部署的量化模型。
+- Pi0.5 路线需要先把官方 OpenPI JAX/Orbax checkpoint 转成 PyTorch checkpoint。
+- UniVLA 和 StarVLA 路线需要各自对应的模型 checkpoint，部分路线还需要 action decoder 资产。
 
-bash scripts/run_awesome_quant_vla.sh openvla_qvla_w8 \
-  --suite spatial \
-  --gpus 0 \
-  --trials 10 \
-  --openvla-python "$OPENVLA_PYTHON" \
-  --openvla-checkpoint "$OPENVLA_CKPT" \
-  --max-samples 32
-```
+具体下载与转换命令见 [checkpoints.md](checkpoints.md)。
 
-运行 UniVLA FP16：
+## 输出含义
 
-```bash
-conda activate awesome_qvla_openvla
-cd "$AWESOME_QVLA_ROOT"
-source .env.local
-export UNIVLA_ATTN_IMPL=eager
+一次成功评测通常生成：
 
-bash scripts/run_awesome_quant_vla.sh univla_fp16 \
-  --suite spatial \
-  --gpus 0 \
-  --trials 10 \
-  --univla-python "$UNIVLA_PYTHON" \
-  --univla-checkpoint "$UNIVLA_CKPT" \
-  --univla-action-decoder "$UNIVLA_ACTION_DECODER"
-```
-
-运行 StarVLA-OFT FP16/BF16：
-
-```bash
-conda activate awesome_qvla_starvla
-cd "$AWESOME_QVLA_ROOT"
-source .env.local
-
-bash scripts/run_awesome_quant_vla.sh starvla_oft_fp16 \
-  --suite spatial \
-  --gpus 0 \
-  --trials 10 \
-  --port-base 8200 \
-  --starvla-python "$STARVLA_PYTHON" \
-  --starvla-checkpoint "$STARVLA_CKPT" \
-  --output-root "$AWESOME_QVLA_ROOT/results/awesome_quant_vla/starvla_oft_fp16_spatial_final"
-```
-
-查看结果：
-
-```bash
-bash scripts/run_awesome_quant_vla.sh <profile> \
-  --suite <suite> \
-  --output-root /path/to/result_dir \
-  --action result
-```
-
-## 输出目录说明
-
-一次成功评测通常会生成：
-
-```bash
+```text
 results/<run_name>/
-  merged_summary.json
-  merged_summary.md
-  logs/
-  summaries/
-  rollouts/
-  act_stats/
-  packdir/
+|-- merged_summary.json
+|-- merged_summary.md
+|-- logs/
+|-- summaries/
+|-- rollouts/
+|-- act_stats/
+|-- packdir/
+`-- proxy/ 或 gates/ 或 calib/，取决于具体路线
 ```
 
-常见文件含义：
+主要评测依据是 `merged_summary.json` 和 `merged_summary.md`。`act_stats/`、`packdir/`、`proxy/`、`gates/`、`calib/` 属于路线相关中间产物，不应直接等同于最终可部署模型。
 
-- `merged_summary.json`：机器可读的总成功率和每个任务结果。
-- `merged_summary.md`：人工查看用的结果表。
-- `logs/run.log`：launcher 主日志。
-- `logs/server_shard_*.log`：推理服务日志。
-- `logs/eval_shard_*.stdout.log`：LIBERO 评测 stdout。
-- `act_stats/`：量化运行时采集的 activation statistics。
-- `packdir/`：本次运行的临时 pack staging 目录。
-- `proxy/proxy.pt`、`gates/`、`calib/`：OpenVLA/QVLA 路线的分析与分配产物。
-
-## 范围说明
-
-quant-vla 主要面向量化流程整合、LIBERO 评测和工程复现。当前并不是所有路线都会输出一个可直接交给真实机器人或国产加速卡运行的独立量化模型。
-
-不同路线的产物并不完全相同：有些是在推理时动态注入量化行为，有些读取预构建的 `quantized.pt` pack，有些生成 QVLA 的校准、proxy 和 bit allocation 产物。真实机器人部署或非 NVIDIA 硬件部署仍需要模型导出、运行时转换、算子适配、时延验证和控制接口对接。
-
-## 开发检查
-
-提交前建议至少执行：
-
-```bash
-bash -n scripts/run_awesome_quant_vla.sh
-bash -n scripts/run_groot_benchmark.sh
-bash -n scripts/run_pi05_libero_benchmark.sh
-bash -n scripts/run_openvla_qvla.sh
-bash -n scripts/run_univla_libero.sh
-bash -n scripts/run_starvla_libero.sh
-
-PYTHONPATH=. python -m compileall -q gr00t tools scripts examples
-```
-
-新增或修改路线时：
-
-1. 保留上游来源说明，但用户入口尽量统一到 `scripts/run_awesome_quant_vla.sh`。
-2. 在文档里写清楚 checkpoint、pack、环境变量和依赖假设。
-3. `--action plan` 需要展示最终解析出的路径和量化模式。
-4. 先跑小规模 smoke test，再跑完整 LIBERO 评测。
-5. 只有在 summary 文件生成且 `--action result` 可读后，才把结果写入验证文档。
-
-## 目录结构
+## 项目结构
 
 ```text
 quant-vla
@@ -354,6 +174,30 @@ quant-vla
 `-- results/
 ```
 
+## 范围与边界
+
+quant-vla 主要面向 VLA 模型的研究复现、后训练量化评测和工程整合。
+
+本仓库不内置大型 checkpoint 或数据集，也不声明每条路线都会输出一个可以直接交给真实机器人或非 NVIDIA 加速卡运行的独立量化模型。部分路线是在推理时注入量化行为，部分路线读取预构建 GPTQ pack，部分路线生成 calibration、proxy 或 bit allocation 产物。
+
+真实机器人部署仍需要模型导出、runtime 转换、硬件算子支持、时延验证和机器人控制栈对接。
+
+## 社群
+
+加入 RadixRootMind 中国区开发者微信群：
+
+<p align="center">
+  <img src="../../assets/radixrootmind-wechat-group.png" alt="RadixRootMind 中国区开发者微信群二维码" width="360">
+</p>
+
+## 路线图
+
+- 统一 route-level benchmark manifest 和 scorecard。
+- 为所有公开 profile 增加更强的 smoke test。
+- 改进离线环境下的 checkpoint 和量化 pack 发现机制。
+- 补充 DCU、NPU、IPU 等平台的硬件适配说明。
+- 在验证完成后，逐步发布 UniVLA 和 StarVLA 的量化路线。
+
 ## 来源与致谢
 
-quant-vla 整合并适配了 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenDriveLab/UniVLA、StarVLA、OpenPI 和 LIBERO 等项目中的思路与代码路径。使用或再分发相关组件时，请同时核对原项目的许可证与引用要求。
+quant-vla 整合并适配了 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA、StarVLA、OpenPI、GR00T 和 LIBERO 等项目中的思路与代码路线。使用或再分发相关组件时，请同时核对原项目的许可证与引用要求。
