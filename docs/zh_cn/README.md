@@ -187,7 +187,7 @@ quant-vla 主要面向 VLA 模型的研究复现、后训练量化评测和工�
 加入 RadixRootMind 中国区开发者微信群：
 
 <p align="center">
-  <img src="../../assets/radixrootmind-wechat-group.png" alt="RadixRootMind 中国区开发者微信群二维码" width="360">
+  <img src="../../assets/radixrootmind-wechat-group.jpg" alt="RadixRootMind 中国区开发者微信群二维码" width="360">
 </p>
 
 ## 路线图
