@@ -1,10 +1,13 @@
-# quant-vla 中文说明
+<p align="center">
+  <img src="../../assets/radixquantvla-banner.png" alt="RadixQuantVLA" width="760">
+</p>
 
-quant-vla 是一个面向 Vision-Language-Action（VLA）模型量化、LIBERO 评测与硬件适配准备的统一研究与工程项目。
+# RadixQuantVLA 中文说明
+RadixQuantVLA 是一个面向 Vision-Language-Action（VLA）模型量化、LIBERO 评测与硬件适配准备的统一研究与工程项目。
 
 本项目把 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA、StarVLA、GR00T-N1.5、Pi0.5/OpenPI 等相关路线整合到同一个仓库中，并提供统一的启动入口、checkpoint 约定、输出结构和验证说明。
 
-> quant-vla 仍处于持续开发阶段。大型 checkpoint、量化 pack、数据集和评测输出不会提交到 git。
+> RadixQuantVLA 仍处于持续开发阶段。大型 checkpoint、量化 pack、数据集和评测输出不会提交到 git。
 
 ## 为什么要合一？
 
@@ -12,7 +15,7 @@ VLA 模型不同于普通 LLM 或 VLM。它把视觉感知、语言理解、机�
 
 这意味着 VLA 量化不能只看模型大小、重构误差或 token 预测精度。一个可用的 VLA 量化系统，还需要关注动作保真度、时间稳定性、语义动作对齐，以及 LIBERO 或真实机器人任务中的闭环成功率。
 
-当前 VLA 量化相关工作分散在不同项目中，模型族、依赖环境、checkpoint 结构、量化产物和评测脚本都不一致。quant-vla 的目标不是简单堆叠代码，而是把这些路线整理成可复现、可比较、可扩展的统一工程入口。
+当前 VLA 量化相关工作分散在不同项目中，模型族、依赖环境、checkpoint 结构、量化产物和评测脚本都不一致。RadixQuantVLA 的目标不是简单堆叠代码，而是把这些路线整理成可复现、可比较、可扩展的统一工程入口。
 
 ## 如果不合一会有什么问题？
 
@@ -25,7 +28,7 @@ VLA 模型不同于普通 LLM 或 VLM。它把视觉感知、语言理解、机�
 | benchmark 设置分散 | LIBERO suite、task id、trials、init offset、视频保存和日志位置都会影响结果。 |
 | 缺少硬件适配边界 | 迁移到 DCU、NPU、IPU 等平台时，模型、算子、量化产物和 runtime 边界不清晰。 |
 
-quant-vla 通过统一 profile、launcher、路径约定、日志、summary 和文档，降低复现和继续开发的成本。
+RadixQuantVLA 通过统一 profile、launcher、路径约定、日志、summary 和文档，降低复现和继续开发的成本。
 
 ## 设计视角
 
@@ -100,8 +103,8 @@ quant-vla 通过统一 profile、launcher、路径约定、日志、summary 和�
 详细安装、checkpoint 准备和分路线验证命令放在 `docs/` 目录中。README 只保留最小入口。
 
 ```bash
-git clone https://github.com/RadixRootMind/quant-vla.git quant-vla
-cd quant-vla
+git clone https://github.com/RadixRootMind/RadixQuantVLA.git RadixQuantVLA
+cd RadixQuantVLA
 
 cp .env.example .env.local
 source .env.local
@@ -157,7 +160,7 @@ results/<run_name>/
 ## 项目结构
 
 ```text
-quant-vla
+RadixQuantVLA
 |-- .env.example
 |-- docs/
 |-- scripts/
@@ -176,7 +179,7 @@ quant-vla
 
 ## 范围与边界
 
-quant-vla 主要面向 VLA 模型的研究复现、后训练量化评测和工程整合。
+RadixQuantVLA 主要面向 VLA 模型的研究复现、后训练量化评测和工程整合。
 
 本仓库不内置大型 checkpoint 或数据集，也不声明每条路线都会输出一个可以直接交给真实机器人或非 NVIDIA 加速卡运行的独立量化模型。部分路线是在推理时注入量化行为，部分路线读取预构建 GPTQ pack，部分路线生成 calibration、proxy 或 bit allocation 产物。
 
@@ -200,4 +203,4 @@ quant-vla 主要面向 VLA 模型的研究复现、后训练量化评测和工�
 
 ## 来源与致谢
 
-quant-vla 整合并适配了 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA、StarVLA、OpenPI、GR00T 和 LIBERO 等项目中的思路与代码路线。使用或再分发相关组件时，请同时核对原项目的许可证与引用要求。
+RadixQuantVLA 整合并适配了 QuantVLA、Omega-QVLA、QVLA/OpenVLA、OpenVLA-OFT、OpenDriveLab/UniVLA、StarVLA、OpenPI、GR00T 和 LIBERO 等项目中的思路与代码路线。使用或再分发相关组件时，请同时核对原项目的许可证与引用要求。

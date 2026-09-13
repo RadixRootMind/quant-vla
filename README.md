@@ -1,10 +1,13 @@
-# quant-vla
+<p align="center">
+  <img src="assets/radixquantvla-banner.png" alt="RadixQuantVLA" width="760">
+</p>
 
-quant-vla is a unified research and engineering stack for Vision-Language-Action (VLA) model quantization, LIBERO evaluation, and hardware-portability preparation.
+# RadixQuantVLA
+RadixQuantVLA is a unified research and engineering stack for Vision-Language-Action (VLA) model quantization, LIBERO evaluation, and hardware-portability preparation.
 
 The repository integrates QuantVLA, Omega-QVLA, QVLA/OpenVLA, OpenVLA-OFT, OpenDriveLab/UniVLA, StarVLA, GR00T-N1.5, and Pi0.5/OpenPI-style routes behind a shared set of launchers, checkpoint conventions, output formats, and validation notes.
 
-> quant-vla is under active development. Large checkpoints, quantized packs, datasets, and generated benchmark outputs are intentionally kept outside git.
+> RadixQuantVLA is under active development. Large checkpoints, quantized packs, datasets, and generated benchmark outputs are intentionally kept outside git.
 
 ## Why Unify VLA Quantization?
 
@@ -12,7 +15,7 @@ VLA models are not ordinary language or vision-language models. They combine vis
 
 This makes VLA quantization different from conventional LLM quantization. Token-level accuracy, reconstruction error, or model size alone cannot fully explain whether a compressed VLA policy still works. A practical VLA quantization stack must also preserve action fidelity, temporal stability, semantic-action alignment, and downstream task success.
 
-Existing VLA quantization work is fragmented across model families, runtime assumptions, checkpoint layouts, and evaluation scripts. quant-vla turns these separate code paths into named, reproducible routes so different quantization methods can be inspected, compared, and extended in one project.
+Existing VLA quantization work is fragmented across model families, runtime assumptions, checkpoint layouts, and evaluation scripts. RadixQuantVLA turns these separate code paths into named, reproducible routes so different quantization methods can be inspected, compared, and extended in one project.
 
 ## What Breaks Without a Unified Stack?
 
@@ -25,7 +28,7 @@ Existing VLA quantization work is fragmented across model families, runtime assu
 | Scattered benchmark settings | LIBERO suite, task id, trial count, init offset, video, and logging choices become hidden variables. |
 | No stable hardware boundary | Porting to DCU, NPU, IPU, or other accelerators requires a clear route, operator, artifact, and runtime definition. |
 
-quant-vla addresses these issues by standardizing route names, launcher behavior, checkpoint conventions, logs, summaries, and route-level documentation.
+RadixQuantVLA addresses these issues by standardizing route names, launcher behavior, checkpoint conventions, logs, summaries, and route-level documentation.
 
 ## Design View
 
@@ -46,7 +49,7 @@ Calibration, sensitivity analysis, rotation, runtime quantization, GPTQ packs, m
 
 From this view, quantization is treated as a behavior-preserving compression problem rather than only a tensor compression problem. The repository therefore keeps the model route, quantization method, calibration data, evaluation suite, and output artifacts explicit.
 
-## What quant-vla Provides
+## What RadixQuantVLA Provides
 
 | Layer | Purpose |
 | --- | --- |
@@ -100,8 +103,8 @@ The validation snapshot above was reproduced on the following workstation:
 Detailed installation, checkpoint preparation, and route-specific verification commands are maintained in `docs/`.
 
 ```bash
-git clone https://github.com/RadixRootMind/quant-vla.git quant-vla
-cd quant-vla
+git clone https://github.com/RadixRootMind/RadixQuantVLA.git RadixQuantVLA
+cd RadixQuantVLA
 
 cp .env.example .env.local
 source .env.local
@@ -157,7 +160,7 @@ The primary benchmark evidence is `merged_summary.json` and `merged_summary.md`.
 ## Repository Layout
 
 ```text
-quant-vla
+RadixQuantVLA
 |-- .env.example
 |-- docs/
 |-- scripts/
@@ -176,7 +179,7 @@ quant-vla
 
 ## Scope and Non-goals
 
-quant-vla focuses on research reproduction, post-training quantization evaluation, and engineering integration for VLA models.
+RadixQuantVLA focuses on research reproduction, post-training quantization evaluation, and engineering integration for VLA models.
 
 It does not bundle large checkpoints or datasets. It also does not claim that every route emits a standalone deployable quantized model for real robots or non-NVIDIA accelerators. Some routes evaluate quantized behavior at runtime, some load prebuilt GPTQ packs, and some produce calibration, proxy, or bit-allocation artifacts.
 
@@ -200,4 +203,4 @@ Join the RadixRootMind China developer WeChat group:
 
 ## Lineage and Credits
 
-quant-vla integrates and adapts ideas and code paths from QuantVLA, Omega-QVLA, QVLA/OpenVLA, OpenVLA-OFT, OpenDriveLab/UniVLA, StarVLA, OpenPI, GR00T, and LIBERO. Please check the original repositories and licenses when using or redistributing derived components.
+RadixQuantVLA integrates and adapts ideas and code paths from QuantVLA, Omega-QVLA, QVLA/OpenVLA, OpenVLA-OFT, OpenDriveLab/UniVLA, StarVLA, OpenPI, GR00T, and LIBERO. Please check the original repositories and licenses when using or redistributing derived components.
